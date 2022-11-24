@@ -1,78 +1,92 @@
-import React from "react";
+import React, { useState } from "react";
 import "./App.css";
-import Board from "./components/Board";
+import Row from "./components/Row";
+import Square from "./components/Square";
 import calculateWinner from "./utils/CalculateWinner";
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      id: 1,
-      history: [
-        {
-          squares: Array(9).fill(null),
-        },
-      ],
-      xIsNext: true,
-      stepNumber: 0,
-    };
-  }
+function TicToc() {
+  const [xIsNext, setXIsNext] = useState(true);
+  const [stepNumber, setStepNumber] = useState(0);
+  const [playHistory, setHistory] = useState([
+    {
+      squares: Array(9).fill(null),
+    },
+  ]);
 
-  handleClickSquare = (i) => {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
+  const _history = playHistory.slice(0, stepNumber + 1);
+  const current = _history[_history.length - 1];
+  const squares = current.squares.slice();
+
+  const handleClickSquare = (value) => {
+    if (calculateWinner(squares) || squares[value]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? "X" : "O";
-    this.setState({
-      history: history.concat([
-        {
-          squares: squares,
-        },
-      ]),
-      xIsNext: !this.state.xIsNext,
-      stepNumber: history.length,
-    });
+    squares[value] = xIsNext ? "X" : "O";
+    setHistory((prev) => [...prev, { squares: squares }]);
+
+    setXIsNext((prev) => !prev);
+    setStepNumber(_history.length);
   };
 
-  handleJumpTo = (step) => {
-    console.log(this.state.history[step]);
-    this.setState({
-      stepNumber: step,
-      isNext: step % 2 === 0,
-    });
+  const handleJumpTo = (step) => {
+    setXIsNext(step % 2 === 0);
+    setStepNumber(step);
   };
 
-  render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
-    const moves = history.map((step, move) => {
-      const desc = move ? "Go to move #" + move : "Go to game start";
+  const moves = playHistory.map((step, move) => {
+    const desc = move ? "Go to move #" + move : "Go to game start";
 
-      return (
-        <li key={move}>
-          <button onClick={() => this.handleJumpTo(move)}>{desc}</button>
-        </li>
-      );
-    });
-    let status;
-
-    if (winner) {
-      status = "Winner " + winner;
-    } else {
-      status = "Next player: " + (this.state.isNext ? "X" : "O");
-    }
     return (
-      <div className="App">
-        <Board squares={current.squares} handleClickSquare={this.handleClickSquare} />
-        {status}
-        <ol>{moves}</ol>
-      </div>
+      <li key={move}>
+        <button onClick={() => handleJumpTo(move)}>{desc}</button>
+      </li>
     );
+  });
+
+  const winner = calculateWinner(squares);
+
+  let status;
+
+  if (winner) {
+    status = "Winner " + winner;
+  } else {
+    status = "Next player: " + (xIsNext ? "X" : "O");
   }
+
+  return (
+    <div className="game">
+      <div className="board">
+        <Row>
+          <Square value={squares[0]} handleClick={() => handleClickSquare(0)} />
+          <Square value={squares[1]} handleClick={() => handleClickSquare(1)} />
+          <Square value={squares[2]} handleClick={() => handleClickSquare(2)} />
+        </Row>
+        <Row>
+          <Square value={squares[3]} handleClick={() => handleClickSquare(3)} />
+          <Square value={squares[4]} handleClick={() => handleClickSquare(4)} />
+          <Square value={squares[5]} handleClick={() => handleClickSquare(5)} />
+        </Row>
+        <Row>
+          <Square value={squares[6]} handleClick={() => handleClickSquare(6)} />
+          <Square value={squares[7]} handleClick={() => handleClickSquare(7)} />
+          <Square value={squares[8]} handleClick={() => handleClickSquare(8)} />
+        </Row>
+      </div>
+      {status}
+      <ol>{moves}</ol>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div className="App">
+      <main className="main">
+        <h1>Tic Toc</h1>
+        <TicToc />
+      </main>
+    </div>
+  );
 }
 
 export default App;
